@@ -1,26 +1,261 @@
-@import "tailwindcss";
+/* Pretendard — 기본 서체 */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+
+/* Space Grotesk — 영문 강조용 */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap');
+
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+/**
+ * 글로벌 CSS 변수 및 기본 스타일
+ *
+ * @description jbeat-resume 디자인 시스템(src/app/globals.css) 이식
+ * 라이트/다크 모드 색상 변수 정의. 새 색상·컴포넌트 스타일을 발명하지 않는다.
+ * shadcn/ui(base-nova preset) 초기화로 생성된 --card, --sidebar-* 등 자체 변수는 유지하되,
+ * jbeat-resume과 이름이 겹치는 --background/--foreground/--border/--primary 등은
+ * 아래에서 jbeat-resume 값으로 재정의해 최종적으로 이식 값이 적용되도록 한다
+ */
 
 :root {
+  --font-base: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto,
+    'Helvetica Neue', 'Segoe UI', sans-serif;
+  --font-emphasis: 'Space Grotesk';
+
+  /* 배경 (3계층) */
   --background: #ffffff;
-  --foreground: #171717;
+  --background-subtle: #f7f8fa;
+  --background-muted: #f2f4f6;
+
+  /* 텍스트 (3계층) */
+  --foreground: #191f28;
+  --foreground-muted: #4e5968;
+  --foreground-subtle: #8b95a1;
+
+  /* 테두리 */
+  --border: #e5e8eb;
+  --border-strong: #c9cdd2;
+
+  /* 브랜드 */
+  --brand-primary: #0064ff;
+  --brand-primary-hover: #0050d3;
+  --brand-subtle: #e8f0ff;
+
+  /* shadcn 컴포넌트(Button 등)가 참조하는 --primary를 브랜드 컬러로 매핑 */
+  --primary: var(--brand-primary);
+  --primary-foreground: #ffffff;
+  --card: var(--background-subtle);
+  --card-foreground: var(--foreground);
+  --popover: var(--background);
+  --popover-foreground: var(--foreground);
+  --secondary: var(--background-muted);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--background-muted);
+  --muted-foreground: var(--foreground-muted);
+  --accent: var(--brand-subtle);
+  --accent-foreground: var(--brand-primary);
+  --input: var(--border);
+  --ring: var(--brand-primary);
+  --radius: 1rem;
+
+  /* 이징 함수 */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-expo: cubic-bezier(0.87, 0, 0.13, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* 모션 duration 토큰 */
+  --duration-fast: 200ms;
+  --duration-base: 350ms;
+  --duration-slow: 600ms;
+}
+
+.dark {
+  --background: #111111;
+  --background-subtle: #1a1a1a;
+  --background-muted: #222222;
+
+  --foreground: #ffffff;
+  --foreground-muted: #c8d0da;
+  --foreground-subtle: #6b7685;
+
+  --border: #2b2f36;
+  --border-strong: #3d434e;
+
+  --brand-primary: #3d82ff;
+  --brand-primary-hover: #5c95ff;
+  --brand-subtle: #0d1f40;
+
+  --primary: var(--brand-primary);
+  --primary-foreground: #ffffff;
+  --card: var(--background-subtle);
+  --card-foreground: var(--foreground);
+  --popover: var(--background-subtle);
+  --popover-foreground: var(--foreground);
+  --secondary: var(--background-muted);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--background-muted);
+  --muted-foreground: var(--foreground-muted);
+  --accent: var(--brand-subtle);
+  --accent-foreground: var(--brand-primary);
+  --input: var(--border);
+  --ring: var(--brand-primary);
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-background-subtle: var(--background-subtle);
+  --color-background-muted: var(--background-muted);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-foreground-muted: var(--foreground-muted);
+  --color-foreground-subtle: var(--foreground-subtle);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-hover: var(--brand-primary-hover);
+  --color-brand-subtle: var(--brand-subtle);
+  --font-base: var(--font-base);
+  --font-emphasis: var(--font-emphasis);
+  --font-sans: var(--font-base);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 body {
-  background: var(--background);
+  font-family: var(--font-base);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.25s ease, color 0.25s ease;
+  letter-spacing: -0.01em;
+}
+
+a,
+button,
+[role='button'],
+[role='tab'],
+label[for],
+summary,
+input[type='checkbox'],
+input[type='radio'],
+select {
+  cursor: pointer;
+}
+
+a *,
+button *,
+[role='button'] *,
+[role='tab'] * {
+  cursor: inherit;
+}
+
+.font-emphasis {
+  font-family: var(--font-emphasis), var(--font-base);
+  letter-spacing: -0.01em;
+}
+
+/* 알약형 버튼 */
+.toss-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 1.75rem;
+  height: 52px;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  transition: all var(--duration-fast) var(--ease-smooth);
+  cursor: pointer;
+}
+
+.toss-btn-primary {
+  background: var(--brand-primary);
+  color: #ffffff;
+}
+
+.toss-btn-primary:hover {
+  background: var(--brand-primary-hover);
+}
+
+.toss-btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--border-strong);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+.toss-btn-outline:hover {
+  border-color: var(--foreground);
+  background: var(--foreground);
+  color: var(--background);
+}
+
+/* 카드 — border 없음, 배경색으로 레이어 구분 */
+.toss-card {
+  background: var(--background-subtle);
+  border-radius: 24px;
+  padding: 2rem;
+  transition: transform var(--duration-fast) var(--ease-smooth);
+}
+
+.toss-card:hover {
+  transform: translateY(-4px);
+}
+
+.number-badge-soft {
+  background: linear-gradient(145deg, var(--background-subtle) 0%, var(--brand-subtle) 100%);
+  box-shadow: 0 2px 8px rgba(0, 100, 255, 0.08);
+  color: var(--brand-primary);
+  letter-spacing: 0.04em;
+  font-family: var(--font-emphasis);
+}
+
+.number-badge-accent {
+  background: linear-gradient(160deg, rgba(80, 148, 255, 1) 0%, rgba(0, 80, 220, 0.95) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 2px 8px rgba(0, 100, 255, 0.28),
+    0 6px 16px rgba(0, 100, 255, 0.18);
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.number-badge-neutral {
+  background: linear-gradient(160deg, var(--background-subtle) 0%, var(--background-muted) 100%);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    0 6px 16px rgba(0, 0, 0, 0.05);
+  color: var(--foreground);
+  letter-spacing: -0.01em;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
