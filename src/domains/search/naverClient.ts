@@ -1,6 +1,6 @@
 const NAVER_SHOP_SEARCH_URL = 'https://openapi.naver.com/v1/search/shop.json';
 
-/** 네이버 쇼핑 검색 API 원본 응답 상품 타입 — 외부 계약이므로 필드명을 임의 변경하지 않는다 */
+/** 네이버 쇼핑 검색 API 원본 응답 상품 타입 — 외부 계약이므로 필드명 임의 변경 금지 */
 interface NaverShopItem {
   title: string;
   link: string;

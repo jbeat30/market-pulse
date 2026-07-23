@@ -56,7 +56,7 @@ export const createAndRunSearchJob = async (input: CreateSearchJobInput, keyword
         naverProductId: item.productId || null,
         title: item.title.replace(/<\/?b>/g, ''),
         price: item.lprice ? Number(item.lprice) : null,
-        highPrice: item.hprice ? Number(item.hprice) : null,
+        highPrice: item.hprice ? Number(item.hprice) : null, // 네이버 API 특성상 대부분 빈 문자열 응답(가격비교 카탈로그 상품 극히 일부만 제공)
         mallName: item.mallName || null,
         productUrl: item.link,
         imageUrl: item.image || null,
