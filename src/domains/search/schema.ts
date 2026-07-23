@@ -20,3 +20,10 @@ export const listSearchJobsQuerySchema = z.object({
 });
 
 export type ListSearchJobsQuery = z.infer<typeof listSearchJobsQuerySchema>;
+
+/** 검색 작업 카테고리 수정 입력 검증 — null은 카테고리 미지정으로 되돌리는 것을 허용 */
+export const updateSearchJobCategorySchema = z.object({
+  categoryId: z.string().trim().min(1).nullable(),
+});
+
+export type UpdateSearchJobCategoryInput = z.infer<typeof updateSearchJobCategorySchema>;

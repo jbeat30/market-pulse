@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { updateCategory, deleteCategory } from '@/domains/category/service';
 import { updateCategorySchema } from '@/domains/category/schema';
+import { requireAuth } from '@/lib/apiAuth';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -8,6 +9,9 @@ interface RouteParams {
 
 /** PATCH /api/categories/:id — 카테고리 수정 */
 export async function PATCH(request: Request, { params }: RouteParams) {
+  const { response } = await requireAuth();
+  if (response) return response;
+
   const { id } = await params;
   const body = await request.json();
   const parsed = updateCategorySchema.safeParse(body);
@@ -26,6 +30,9 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
 /** DELETE /api/categories/:id — 카테고리 삭제(하위 잡 이력은 SetNull로 보존) */
 export async function DELETE(_request: Request, { params }: RouteParams) {
+  const { response } = await requireAuth();
+  if (response) return response;
+
   const { id } = await params;
 
   try {

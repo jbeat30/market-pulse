@@ -11,7 +11,7 @@ export type SearchJobStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | '
 
 export interface AdminUser {
   id: string;
-  email: string;
+  userId: string;
   name: string;
   role: UserRole;
   isActive: boolean;
@@ -41,6 +41,7 @@ export interface SearchJob {
   id: string;
   status: SearchJobStatus;
   keyword: string;
+  categoryId: string | null;
   categoryName: string | null;
   requestedCount: number;
   collectedCount: number;

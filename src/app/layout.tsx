@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { SecurityGuard, DevToolsGuard } from '@/components/common';
+import { AppProviders } from '@/components/providers/AppProviders';
 
 export const metadata: Metadata = {
   title: 'market-pulse — 관리자 대시보드',
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 /**
  * 저장된 테마를 첫 페인트 이전에 적용하는 인라인 스크립트
  *
- * @description React 하이드레이션 전에 실행되어 라이트→다크 전환 시 깜빡임(FOUC)을 방지한다
+ * @description React 하이드레이션 전 실행으로 라이트→다크 전환 시 깜빡임(FOUC) 방지
  */
 const THEME_INIT_SCRIPT = `
 (function () {
@@ -39,9 +40,11 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col">
-        <SecurityGuard />
-        <DevToolsGuard />
-        {children}
+        <AppProviders>
+          <SecurityGuard />
+          <DevToolsGuard />
+          {children}
+        </AppProviders>
       </body>
     </html>
   );

@@ -66,6 +66,36 @@ export const upsertKeyword = async (input: CreateKeywordInput) => {
   }
 
   return prisma.keywordHistory.create({
-    data: { keyword: input.keyword, categoryId: input.categoryId ?? null },
+    data: { keyword: input.keyword, categoryId: input.categoryId ?? null, searchCount: 1 },
   });
+};
+
+/**
+ * 키워드 이력의 카테고리 재배치 — 검색 작업 카테고리 사후 수정 시 함께 호출
+ *
+ * @description 동일 키워드가 이동 대상 카테고리에 이미 존재하면 두 이력을 병합(searchCount 합산),
+ * 없으면 현재 이력의 categoryId만 변경 — 카테고리 관리 탭의 키워드 카운트·사용횟수 정합성 유지
+ */
+export const relocateKeywordCategory = async (keywordId: string, categoryId: string | null) => {
+  const current = await prisma.keywordHistory.findUnique({ where: { id: keywordId } });
+  if (!current || current.categoryId === categoryId) return;
+
+  const target = await prisma.keywordHistory.findFirst({
+    where: { keyword: current.keyword, categoryId },
+  });
+
+  if (target) {
+    await prisma.keywordHistory.update({
+      where: { id: target.id },
+      data: {
+        searchCount: { increment: current.searchCount },
+        lastUsedAt: current.lastUsedAt > target.lastUsedAt ? current.lastUsedAt : target.lastUsedAt,
+      },
+    });
+    await prisma.searchJob.updateMany({ where: { keywordId: current.id }, data: { keywordId: target.id } });
+    await prisma.keywordHistory.delete({ where: { id: current.id } });
+    return;
+  }
+
+  await prisma.keywordHistory.update({ where: { id: keywordId }, data: { categoryId } });
 };

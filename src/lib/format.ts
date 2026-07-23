@@ -1,8 +1,8 @@
 import type { SearchJobStatus } from '@/types/domain';
 
-/** 원화 가격 포맷 — null은 "가격 정보 없음"으로 표시 */
-export const formatPrice = (price: number | null): string => {
-  if (price === null) return '가격 정보 없음';
+/** 원화 가격 포맷 — null일 때 표시할 문구는 fallback으로 지정(기본값 "가격 정보 없음") */
+export const formatPrice = (price: number | null, fallback = '가격 정보 없음'): string => {
+  if (price === null) return fallback;
   return `${price.toLocaleString('ko-KR')}원`;
 };
 

@@ -14,10 +14,10 @@
  * 글로벌 CSS 변수 및 기본 스타일
  *
  * @description jbeat-resume 디자인 시스템(src/app/globals.css) 이식
- * 라이트/다크 모드 색상 변수 정의. 새 색상·컴포넌트 스타일을 발명하지 않는다.
+ * 라이트/다크 모드 색상 변수 정의, 새 색상·컴포넌트 스타일 발명 금지.
  * shadcn/ui(base-nova preset) 초기화로 생성된 --card, --sidebar-* 등 자체 변수는 유지하되,
  * jbeat-resume과 이름이 겹치는 --background/--foreground/--border/--primary 등은
- * 아래에서 jbeat-resume 값으로 재정의해 최종적으로 이식 값이 적용되도록 한다
+ * 아래에서 jbeat-resume 값으로 재정의해 최종적으로 이식 값 적용
  */
 
 :root {

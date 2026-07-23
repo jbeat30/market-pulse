@@ -8,6 +8,9 @@ import type { Category } from '@/types/domain';
 const MIN_REQUESTED_COUNT = 5;
 const MAX_REQUESTED_COUNT = 40;
 
+/** "카테고리 선택 안 함" sentinel — Select가 uncontrolled(undefined)로 시작했다가 controlled로 바뀌는 React 경고 방지 */
+const NO_CATEGORY_VALUE = '__none__';
+
 interface QuickSearchBarProps {
   categories: Category[];
   selectedCategoryId: string | null;
@@ -34,14 +37,21 @@ export const QuickSearchBar = ({
   isSubmitting = false,
 }: QuickSearchBarProps) => {
   const activeCategories = categories.filter((category) => category.isActive);
+  const categoryNameById = new Map(activeCategories.map((category) => [category.id, category.name]));
 
   return (
     <div className="toss-card flex flex-col gap-3 !p-4 sm:flex-row sm:items-center">
-      <Select value={selectedCategoryId ?? undefined} onValueChange={(value) => onCategoryChange(value)}>
+      <Select
+        value={selectedCategoryId ?? NO_CATEGORY_VALUE}
+        onValueChange={(value) => onCategoryChange(value === NO_CATEGORY_VALUE ? null : value)}
+      >
         <SelectTrigger className="w-full sm:w-[180px]" aria-label="카테고리 선택">
-          <SelectValue placeholder="카테고리 선택" />
+          <SelectValue>
+            {(value: string) => (value === NO_CATEGORY_VALUE ? '카테고리 선택' : (categoryNameById.get(value) ?? value))}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
+          <SelectItem value={NO_CATEGORY_VALUE}>카테고리 선택 안 함</SelectItem>
           {activeCategories.map((category) => (
             <SelectItem key={category.id} value={category.id}>
               {category.name}
@@ -56,7 +66,8 @@ export const QuickSearchBar = ({
         placeholder="검색 키워드를 입력하세요"
         className="flex-1"
         onKeyDown={(e) => {
-          if (e.key === 'Enter' && !isSubmitting) onSearch();
+          // 한글 등 IME 조합 확정 시 발생하는 Enter keydown까지 처리하면 검색이 중복 실행됨
+          if (e.key === 'Enter' && !e.nativeEvent.isComposing && !isSubmitting) onSearch();
         }}
       />
 
