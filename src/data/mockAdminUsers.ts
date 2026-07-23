@@ -5,7 +5,7 @@ export const mockAdminUsers: AdminUser[] = [
   {
     id: 'user_1',
     email: 'owner@example.com',
-    name: '강주빛',
+    name: 'jbeat',
     role: 'SUPER_ADMIN',
     isActive: true,
     lastLoginAt: '2026-07-23T14:55:00+09:00',

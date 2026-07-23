@@ -15,7 +15,7 @@ export const mockCrawlJobs: CrawlJob[] = [
     startedAt: '2026-07-23T15:02:00+09:00',
     finishedAt: null,
     createdAt: '2026-07-23T15:01:40+09:00',
-    createdByName: '강주빛',
+    createdByName: 'jbeat',
   },
   {
     id: 'job_2',
@@ -30,7 +30,7 @@ export const mockCrawlJobs: CrawlJob[] = [
     startedAt: '2026-07-22T09:12:10+09:00',
     finishedAt: '2026-07-22T09:15:42+09:00',
     createdAt: '2026-07-22T09:12:00+09:00',
-    createdByName: '강주빛',
+    createdByName: 'jbeat',
   },
   {
     id: 'job_3',
@@ -75,6 +75,6 @@ export const mockCrawlJobs: CrawlJob[] = [
     startedAt: null,
     finishedAt: null,
     createdAt: '2026-07-23T15:20:00+09:00',
-    createdByName: '강주빛',
+    createdByName: 'jbeat',
   },
 ];
