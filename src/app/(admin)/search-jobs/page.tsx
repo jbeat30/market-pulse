@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { SectionTitle, Badge } from '@/components/common';
 import {
   DashboardCard,
@@ -10,33 +11,42 @@ import {
   FilterPanel,
 } from '@/components/dashboard';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { mockSearchJobs } from '@/data/mockSearchJobs';
-import { mockProducts } from '@/data/mockProducts';
 import { useDashboardStore } from '@/stores/useDashboardStore';
-import { useMockLoading } from '@/hooks/useMockLoading';
+import { apiFetch } from '@/lib/apiClient';
 import { formatDateTime, formatPrice, getSearchJobStatusMeta } from '@/lib/format';
-import type { SearchJob } from '@/types/domain';
+import type { Product, SearchJob } from '@/types/domain';
 
 const SEARCH_JOBS_TABLE_COLUMN_COUNT = 6;
 
+interface SearchJobDetail extends SearchJob {
+  products: Product[];
+}
+
 /** 검색 이력 페이지 — 작업 목록 + 완료 작업 클릭 시 수집 상품을 필터링해 드로어에서 열람 */
 export default function SearchJobsPage() {
-  const [selectedJob, setSelectedJob] = useState<SearchJob | null>(null);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const inspectedProductId = useDashboardStore((state) => state.inspectedProductId);
   const openInspection = useDashboardStore((state) => state.openInspection);
   const closeInspection = useDashboardStore((state) => state.closeInspection);
   const filter = useDashboardStore((state) => state.filter);
   const setFilter = useDashboardStore((state) => state.setFilter);
   const resetFilter = useDashboardStore((state) => state.resetFilter);
-  const isLoading = useMockLoading();
 
-  const jobProducts = selectedJob
-    ? mockProducts
-        .filter((product) => product.searchJobId === selectedJob.id)
-        .filter((product) => filter.minPrice === null || (product.price ?? 0) >= filter.minPrice)
-        .filter((product) => filter.maxPrice === null || (product.price ?? 0) <= filter.maxPrice)
-    : [];
-  const inspectedProduct = mockProducts.find((product) => product.id === inspectedProductId) ?? null;
+  const { data: jobs, isLoading } = useQuery({
+    queryKey: ['search-jobs', 'all'],
+    queryFn: () => apiFetch<SearchJob[]>('/api/search-jobs?take=50'),
+  });
+
+  const { data: selectedJob } = useQuery({
+    queryKey: ['search-jobs', selectedJobId],
+    queryFn: () => apiFetch<SearchJobDetail>(`/api/search-jobs/${selectedJobId}`),
+    enabled: selectedJobId !== null,
+  });
+
+  const jobProducts = (selectedJob?.products ?? [])
+    .filter((product) => filter.minPrice === null || (product.price ?? 0) >= filter.minPrice)
+    .filter((product) => filter.maxPrice === null || (product.price ?? 0) <= filter.maxPrice);
+  const inspectedProduct = jobProducts.find((product) => product.id === inspectedProductId) ?? null;
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -62,10 +72,10 @@ export default function SearchJobsPage() {
                 <TableRowSkeleton columns={SEARCH_JOBS_TABLE_COLUMN_COUNT} />
               </>
             ) : (
-              mockSearchJobs.map((job) => {
+              (jobs ?? []).map((job) => {
                 const statusMeta = getSearchJobStatusMeta(job.status);
                 return (
-                  <TableRow key={job.id} className="cursor-pointer" onClick={() => setSelectedJob(job)}>
+                  <TableRow key={job.id} className="cursor-pointer" onClick={() => setSelectedJobId(job.id)}>
                     <TableCell className="font-semibold text-[var(--foreground)]">{job.keyword}</TableCell>
                     <TableCell>{job.categoryName ?? '-'}</TableCell>
                     <TableCell>

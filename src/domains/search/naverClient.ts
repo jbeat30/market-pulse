@@ -38,8 +38,8 @@ export class NaverApiError extends Error {
 /**
  * 네이버 쇼핑 검색 API 호출
  *
- * @description display 최대값은 API 제약상 100이지만, 이 프로젝트는 요청 정책상 5~40으로 제한한다(zod에서 검증).
- * 인증 실패·요청 오류 시 NaverApiError로 감싸 던진다 — 원인은 개발자 로그에서만 확인, 사용자 UI엔 노출하지 않는다
+ * @description display 최대값은 API 제약상 100이지만 이 프로젝트는 요청 정책상 5~40으로 제한(zod 검증).
+ * 인증 실패·요청 오류 시 NaverApiError로 래핑 — 원인은 개발자 로그 전용, 사용자 UI 노출 금지
  */
 export const searchNaverShopping = async (query: string, display: number): Promise<NaverShopItem[]> => {
   const clientId = process.env.NAVER_SEARCH_CLIENT_ID;

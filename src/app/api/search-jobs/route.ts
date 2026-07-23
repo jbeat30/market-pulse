@@ -2,9 +2,13 @@ import { NextResponse } from 'next/server';
 import { createAndRunSearchJob, listSearchJobs } from '@/domains/search/service';
 import { createSearchJobSchema, listSearchJobsQuerySchema } from '@/domains/search/schema';
 import { upsertKeyword } from '@/domains/category/service';
+import { requireAuth } from '@/lib/apiAuth';
 
 /** GET /api/search-jobs?status=RUNNING&take=20 — 검색 작업 목록 조회 */
 export async function GET(request: Request) {
+  const { response } = await requireAuth();
+  if (response) return response;
+
   const { searchParams } = new URL(request.url);
   const parsed = listSearchJobsQuerySchema.safeParse({
     status: searchParams.get('status') ?? undefined,
@@ -16,16 +20,33 @@ export async function GET(request: Request) {
   }
 
   const jobs = await listSearchJobs(parsed.data);
-  return NextResponse.json(jobs);
+  const mapped = jobs.map((job) => ({
+    id: job.id,
+    status: job.status,
+    keyword: job.keyword,
+    categoryName: job.category?.name ?? null,
+    requestedCount: job.requestedCount,
+    collectedCount: job.collectedCount,
+    progress: job.progress,
+    errorMessage: job.errorMessage,
+    startedAt: job.startedAt,
+    finishedAt: job.finishedAt,
+    createdAt: job.createdAt,
+    createdByName: job.createdBy?.name ?? null,
+  }));
+  return NextResponse.json(mapped);
 }
 
 /**
  * POST /api/search-jobs — 검색 작업 생성 및 네이버 쇼핑 검색 API 즉시 실행
  *
- * @description 요청 개수(5~40)만큼 상품을 가져온다. 실제 수집 개수가 요청보다 적을 수 있음(허용).
- * 키워드 이력을 upsert(검색 빈도 통계 갱신)한 뒤 검색 작업을 실행한다
+ * @description 요청 개수(5~40)만큼 상품 조회, 실제 수집 개수가 요청보다 적은 경우는 허용.
+ * 로그인 사용자를 createdBy로 자동 기록, 키워드 이력 upsert(검색 빈도 통계 갱신) 후 실행
  */
 export async function POST(request: Request) {
+  const { session, response } = await requireAuth();
+  if (response) return response;
+
   const body = await request.json();
   const parsed = createSearchJobSchema.safeParse(body);
 
@@ -38,6 +59,6 @@ export async function POST(request: Request) {
     categoryId: parsed.data.categoryId,
   });
 
-  const job = await createAndRunSearchJob(parsed.data, keywordHistory.id);
+  const job = await createAndRunSearchJob({ ...parsed.data, createdById: session.user.id }, keywordHistory.id);
   return NextResponse.json(job, { status: 201 });
 }

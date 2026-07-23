@@ -1,6 +1,7 @@
 'use client';
 
 import { Bell, BellOff, LogOut } from 'lucide-react';
+import { signOut } from 'next-auth/react';
 import { ThemeToggle } from '@/components/common';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 
@@ -35,6 +36,7 @@ export const AdminHeader = ({ userName }: AdminHeaderProps) => {
         <span className="text-[13px] font-semibold text-[var(--foreground)]">{userName}</span>
         <button
           type="button"
+          onClick={() => signOut({ callbackUrl: '/login' })}
           className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--foreground-subtle)] transition-colors hover:bg-[var(--background-muted)] hover:text-[var(--foreground)]"
           aria-label="로그아웃"
         >

@@ -31,8 +31,8 @@ export const getSearchJobById = (id: string) => {
  * 검색 작업 생성 및 즉시 실행
  *
  * @description PENDING 생성 → RUNNING 전이 → 네이버 쇼핑 검색 API 호출 → 결과 저장 → COMPLETED/FAILED.
- * 네이버 검색 API는 동기 호출(단일 요청/응답)이라 별도 워커 큐 없이 이 함수 안에서 즉시 처리한다.
- * 실패해도 예외를 다시 던지지 않고 FAILED 상태로 반환 — 호출부(API 라우트)는 항상 SearchJob 레코드를 받는다
+ * 네이버 검색 API는 동기 호출(단일 요청/응답)이라 별도 워커 큐 없이 이 함수 내부에서 즉시 처리.
+ * 실패해도 예외 재전파 없이 FAILED 상태로 반환 — 호출부(API 라우트)는 항상 SearchJob 레코드 수신
  */
 export const createAndRunSearchJob = async (input: CreateSearchJobInput, keywordId?: string) => {
   const job = await prisma.searchJob.create({

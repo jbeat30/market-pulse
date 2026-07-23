@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import { LogIn } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,18 +11,32 @@ import { ThemeToggle } from '@/components/common';
 /**
  * 로그인 페이지
  *
- * @description 미들웨어 보호 밖의 유일한 공개 경로(05-security.md). Chapter 1은 폼 UI만 구현하며
- * 실제 세션 인증(httpOnly 쿠키, argon2 해시 검증)은 Chapter 2/4에서 연결
+ * @description proxy(구 middleware) 보호 밖의 유일한 공개 경로(05-security.md).
+ * NextAuth Credentials provider로 실제 세션 인증 — 계정 존재 여부 비노출을 위해
+ * 아이디/비밀번호 오류를 구분하지 않는 일관된 실패 메시지 사용
  */
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const router = useRouter();
+  const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => setIsSubmitting(false), 1000);
+    setErrorMessage(null);
+
+    const result = await signIn('credentials', { userId, password, redirect: false });
+
+    if (result?.error) {
+      setErrorMessage('아이디 또는 비밀번호가 올바르지 않습니다');
+      setIsSubmitting(false);
+      return;
+    }
+
+    router.push('/dashboard');
+    router.refresh();
   };
 
   return (
@@ -37,15 +53,15 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
           <div>
-            <Label htmlFor="email" className="mb-2 text-[13px] text-[var(--foreground-muted)]">
-              이메일
+            <Label htmlFor="userId" className="mb-2 text-[13px] text-[var(--foreground-muted)]">
+              아이디
             </Label>
             <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="userId"
+              type="text"
+              autoComplete="username"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
               required
             />
           </div>
@@ -62,6 +78,8 @@ export default function LoginPage() {
               required
             />
           </div>
+
+          {errorMessage && <p className="text-[13px] text-red-500">{errorMessage}</p>}
 
           <button
             type="submit"

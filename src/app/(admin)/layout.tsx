@@ -1,20 +1,20 @@
 import { AdminSidebar, AdminHeader } from '@/components/dashboard';
-import { mockAdminUsers } from '@/data/mockAdminUsers';
+import { auth } from '../../../auth';
 
 /**
  * 어드민 레이아웃
  *
- * @description 사이드바 + 헤더 셸. 실제 세션 기반 라우트 보호는 Chapter 2/4의
- * middleware.ts에서 구현 예정 — Chapter 1은 mock 로그인 사용자로 레이아웃만 완성한다
+ * @description 사이드바 + 헤더 셸. proxy(구 middleware)가 미인증 접근을 /login으로 리다이렉트해
+ * 이 레이아웃 도달 시점엔 항상 세션 존재(그래도 auth() 결과를 무조건 신뢰하지 않고 옵셔널 체이닝 유지)
  */
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const currentUser = mockAdminUsers[0];
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
 
   return (
     <div className="flex min-h-screen bg-[var(--background)]">
       <AdminSidebar />
       <div className="flex flex-1 flex-col">
-        <AdminHeader userName={currentUser?.name ?? '관리자'} />
+        <AdminHeader userName={session?.user?.name ?? '관리자'} />
         <main className="flex-1 overflow-y-auto px-6 py-8">{children}</main>
       </div>
     </div>

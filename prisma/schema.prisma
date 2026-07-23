@@ -24,7 +24,7 @@ enum SearchJobStatus {
 /// 어드민 계정
 model User {
   id           String    @id @default(cuid())
-  email        String    @unique
+  userId       String    @unique // 로그인 아이디(이메일 형식 아님)
   passwordHash String // argon2 해시. 평문 저장 금지
   name         String
   role         UserRole  @default(VIEWER)
@@ -35,7 +35,7 @@ model User {
 
   searchJobs SearchJob[] // 이 유저가 생성한 검색 작업
 
-  @@index([email])
+  @@index([userId])
 }
 
 /// 카테고리 — 검색 대상 비밀유지 핵심(값은 DB에만 존재). 네이버 자체 분류(category1~4)와는 무관한 관리자 정의 그룹
