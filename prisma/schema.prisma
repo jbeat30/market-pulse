@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  SUPER_ADMIN // 계정·역할 관리 포함 전권
+  ADMIN // 크롤·조회·Export
+  VIEWER // 조회 전용
+}
+
+enum CrawlStatus {
+  PENDING // 생성됨, 워커 대기
+  RUNNING // 크롤 진행 중
+  COMPLETED // 정상 완료
+  FAILED // 실패(에러)
+  CANCELLED // 사용자 취소(Abort)
+}
+
+/// 어드민 계정
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String // argon2 해시. 평문 저장 금지
+  name         String
+  role         UserRole  @default(VIEWER)
+  isActive     Boolean   @default(true) // 비활성 시 로그인 차단
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  crawlJobs CrawlJob[] // 이 유저가 생성한 잡
+
+  @@index([email])
+}
+
+/// 카테고리 — 크롤 대상 비밀유지 핵심(값은 DB에만 존재)
+model Category {
+  id        String   @id @default(cuid())
+  name      String // 관리자용 표시명(DB에만 존재)
+  naverCode String? // 네이버 카테고리 코드(선택)
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  keywords  KeywordHistory[]
+  crawlJobs CrawlJob[]
+
+  @@index([isActive])
+}
+
+/// 검색 키워드 이력 — 크롤 대상 비밀유지 핵심(값은 DB에만 존재)
+model KeywordHistory {
+  id          String    @id @default(cuid())
+  keyword     String // 검색어. 소스 하드코딩 금지
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  searchCount Int       @default(0) // 사용 빈도
+  lastUsedAt  DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+
+  crawlJobs CrawlJob[]
+
+  @@index([categoryId])
+  @@index([keyword])
+}
+
+/// 크롤 작업 — 상태 머신(PENDING→RUNNING→COMPLETED/FAILED/CANCELLED)
+model CrawlJob {
+  id          String          @id @default(cuid())
+  status      CrawlStatus     @default(PENDING)
+  keyword     String // 스냅샷 — 실행 시점 값 보존(KeywordHistory 수정/삭제와 무관하게 잡 기록 무결성 유지)
+  categoryId  String?
+  category    Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  keywordId   String?
+  keywordRef  KeywordHistory? @relation(fields: [keywordId], references: [id], onDelete: SetNull)
+  createdById String?
+  createdBy   User?           @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  totalPages   Int     @default(5) // 크롤 대상 페이지(1~5)
+  currentPage  Int     @default(0)
+  progress     Int     @default(0) // 0~100 진행률
+  totalItems   Int     @default(0) // 수집 상품 수
+  errorMessage String? // FAILED 시 개발자용 원인(사용자 UI 미노출)
+
+  startedAt  DateTime?
+  finishedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  products Product[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+/// 크롤된 상품 기본 정보
+model Product {
+  id             String   @id @default(cuid())
+  crawlJobId     String
+  crawlJob       CrawlJob @relation(fields: [crawlJobId], references: [id], onDelete: Cascade)
+  naverProductId String? // 네이버 상품 식별자(있으면)
+  title          String
+  price          Int? // 최저가(원). 파싱 실패 시 null
+  mallName       String? // 판매처
+  productUrl     String? // 원본 URL — 화면에서 실제로 이 링크로 이동 가능해야 함
+  imageUrl       String?
+  shippingFee    Int? // 배송비
+  installFee     Int? // 설치비
+  rank           Int? // 페이지 내 순위
+  page           Int? // 수집된 페이지 번호
+  isAd           Boolean  @default(false) // 광고 여부
+  createdAt      DateTime @default(now())
+
+  specs         ProductSpec[]
+  detailContent ProductDetailContent?
+
+  @@index([crawlJobId])
+  @@index([naverProductId])
+}
+
+/// 상품 동적 key-value 스펙(예: "용량", "색상")
+model ProductSpec {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  specKey   String
+  specValue String
+  sortOrder Int     @default(0)
+
+  @@index([productId])
+}
+
+/// 상품 상세 DOM 콘텐츠(class="Z_LnBTI8j4")
+model ProductDetailContent {
+  id          String   @id @default(cuid())
+  productId   String   @unique
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rawHtml     String?  @db.Text // 원본 HTML — 렌더링 시 sanitize 또는 텍스트만 표시(05-security.md)
+  textContent String?  @db.Text // 텍스트 추출본
+  createdAt   DateTime @default(now())
+}
