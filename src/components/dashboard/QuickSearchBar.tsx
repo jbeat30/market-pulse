@@ -1,6 +1,6 @@
 'use client';
 
-import { Search } from 'lucide-react';
+import { Loader2, Search } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import type { Category } from '@/types/domain';
@@ -12,7 +12,8 @@ interface QuickSearchBarProps {
   onCategoryChange: (categoryId: string | null) => void;
   onKeywordChange: (keyword: string) => void;
   onSearch: () => void;
-  disabled?: boolean;
+  /** 크롤 잡 생성 요청이 진행 중인 상태 — 버튼에 스피너를 표시하고 재클릭을 막는다 */
+  isSubmitting?: boolean;
 }
 
 /** 카테고리/키워드 선택 + 크롤 검색 실행 바 — 알약형 버튼 스타일(toss-btn-primary) */
@@ -23,7 +24,7 @@ export const QuickSearchBar = ({
   onCategoryChange,
   onKeywordChange,
   onSearch,
-  disabled = false,
+  isSubmitting = false,
 }: QuickSearchBarProps) => {
   const activeCategories = categories.filter((category) => category.isActive);
 
@@ -51,18 +52,22 @@ export const QuickSearchBar = ({
         placeholder="검색 키워드를 입력하세요"
         className="flex-1"
         onKeyDown={(e) => {
-          if (e.key === 'Enter' && !disabled) onSearch();
+          if (e.key === 'Enter' && !isSubmitting) onSearch();
         }}
       />
 
       <button
         type="button"
         onClick={onSearch}
-        disabled={disabled || keyword.trim().length === 0}
+        disabled={isSubmitting || keyword.trim().length === 0}
         className="toss-btn toss-btn-primary justify-center disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <Search className="h-4 w-4" strokeWidth={2} />
-        크롤 시작
+        {isSubmitting ? (
+          <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+        ) : (
+          <Search className="h-4 w-4" strokeWidth={2} />
+        )}
+        {isSubmitting ? '요청 중...' : '크롤 시작'}
       </button>
     </div>
   );

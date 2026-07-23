@@ -50,7 +50,7 @@ export default function DashboardPage() {
         onCategoryChange={setSelectedCategoryId}
         onKeywordChange={setSelectedKeyword}
         onSearch={handleSearch}
-        disabled={isSearching}
+        isSubmitting={isSearching}
       />
 
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">

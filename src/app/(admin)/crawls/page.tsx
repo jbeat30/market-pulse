@@ -3,7 +3,14 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { SectionTitle, Badge } from '@/components/common';
-import { DashboardCard, LiveProgressBar, SpecInspectionDrawer, ExcelExportButton, TableRowSkeleton } from '@/components/dashboard';
+import {
+  DashboardCard,
+  LiveProgressBar,
+  SpecInspectionDrawer,
+  ExcelExportButton,
+  TableRowSkeleton,
+  FilterPanel,
+} from '@/components/dashboard';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { mockCrawlJobs } from '@/data/mockCrawlJobs';
 import { mockProducts } from '@/data/mockProducts';
@@ -14,15 +21,24 @@ import type { CrawlJob } from '@/types/domain';
 
 const CRAWLS_TABLE_COLUMN_COUNT = 7;
 
-/** 크롤 이력 페이지 — 잡 목록 + 완료 잡 클릭 시 수집 상품을 드로어에서 열람 */
+/** 크롤 이력 페이지 — 잡 목록 + 완료 잡 클릭 시 수집 상품을 필터링해 드로어에서 열람 */
 export default function CrawlsPage() {
   const [selectedJob, setSelectedJob] = useState<CrawlJob | null>(null);
   const inspectedProductId = useDashboardStore((state) => state.inspectedProductId);
   const openInspection = useDashboardStore((state) => state.openInspection);
   const closeInspection = useDashboardStore((state) => state.closeInspection);
+  const filter = useDashboardStore((state) => state.filter);
+  const setFilter = useDashboardStore((state) => state.setFilter);
+  const resetFilter = useDashboardStore((state) => state.resetFilter);
   const isLoading = useMockLoading();
 
-  const jobProducts = selectedJob ? mockProducts.filter((product) => product.crawlJobId === selectedJob.id) : [];
+  const jobProducts = selectedJob
+    ? mockProducts
+        .filter((product) => product.crawlJobId === selectedJob.id)
+        .filter((product) => !filter.excludeAds || !product.isAd)
+        .filter((product) => filter.minPrice === null || (product.price ?? 0) >= filter.minPrice)
+        .filter((product) => filter.maxPrice === null || (product.price ?? 0) <= filter.maxPrice)
+    : [];
   const inspectedProduct = mockProducts.find((product) => product.id === inspectedProductId) ?? null;
 
   return (
@@ -82,44 +98,50 @@ export default function CrawlsPage() {
         </Table>
       </DashboardCard>
 
-      {/* 선택된 잡 상세 — RUNNING이면 진행률, 아니면 수집 상품 목록 */}
+      {/* 선택된 잡 상세 — RUNNING이면 진행률, 아니면 필터 패널 + 수집 상품 목록 */}
       {selectedJob && (
-        <DashboardCard className="mt-6 !p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-[15px] font-bold text-[var(--foreground)]">{selectedJob.keyword}</h3>
-              {selectedJob.errorMessage && (
-                <p className="mt-1 text-[13px] text-red-500">{selectedJob.errorMessage}</p>
-              )}
-            </div>
-            <ExcelExportButton onClick={() => {}} disabled={jobProducts.length === 0} />
-          </div>
-
-          {selectedJob.status === 'RUNNING' ? (
-            <LiveProgressBar progress={selectedJob.progress} label={`페이지 ${selectedJob.currentPage}/${selectedJob.totalPages}`} />
-          ) : jobProducts.length === 0 ? (
-            <p className="text-[13px] text-[var(--foreground-subtle)]">수집된 상품이 없습니다</p>
-          ) : (
-            <div className="flex flex-col divide-y divide-[var(--border)]">
-              {jobProducts.map((product) => (
-                <button
-                  key={product.id}
-                  type="button"
-                  onClick={() => openInspection(product.id)}
-                  className="flex items-center justify-between py-3 text-left hover:opacity-70"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-[13.5px] font-medium text-[var(--foreground)]">{product.title}</span>
-                    {product.isAd && <Badge text="광고" variant="tech" />}
-                  </div>
-                  <span className="text-[13.5px] font-semibold text-[var(--brand-primary)]">
-                    {formatPrice(product.price)}
-                  </span>
-                </button>
-              ))}
-            </div>
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
+          {selectedJob.status !== 'RUNNING' && (
+            <FilterPanel filter={filter} onChange={setFilter} onReset={resetFilter} />
           )}
-        </DashboardCard>
+
+          <DashboardCard className={`!p-6 ${selectedJob.status === 'RUNNING' ? 'lg:col-span-2' : ''}`}>
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-[15px] font-bold text-[var(--foreground)]">{selectedJob.keyword}</h3>
+                {selectedJob.errorMessage && (
+                  <p className="mt-1 text-[13px] text-red-500">{selectedJob.errorMessage}</p>
+                )}
+              </div>
+              <ExcelExportButton onClick={() => {}} disabled={jobProducts.length === 0} />
+            </div>
+
+            {selectedJob.status === 'RUNNING' ? (
+              <LiveProgressBar progress={selectedJob.progress} label={`페이지 ${selectedJob.currentPage}/${selectedJob.totalPages}`} />
+            ) : jobProducts.length === 0 ? (
+              <p className="text-[13px] text-[var(--foreground-subtle)]">조건에 맞는 상품이 없습니다</p>
+            ) : (
+              <div className="flex flex-col divide-y divide-[var(--border)]">
+                {jobProducts.map((product) => (
+                  <button
+                    key={product.id}
+                    type="button"
+                    onClick={() => openInspection(product.id)}
+                    className="flex items-center justify-between py-3 text-left hover:opacity-70"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-[13.5px] font-medium text-[var(--foreground)]">{product.title}</span>
+                      {product.isAd && <Badge text="광고" variant="tech" />}
+                    </div>
+                    <span className="text-[13.5px] font-semibold text-[var(--brand-primary)]">
+                      {formatPrice(product.price)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </DashboardCard>
+        </div>
       )}
 
       <SpecInspectionDrawer
