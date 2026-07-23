@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { SecurityGuard, DevToolsGuard } from '@/components/common';
 
 export const metadata: Metadata = {
   title: 'market-pulse — 관리자 대시보드',
@@ -37,7 +38,11 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <SecurityGuard />
+        <DevToolsGuard />
+        {children}
+      </body>
     </html>
   );
 }
