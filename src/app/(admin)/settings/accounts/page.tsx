@@ -2,9 +2,10 @@
 
 import { Plus } from 'lucide-react';
 import { SectionTitle, Badge } from '@/components/common';
-import { DashboardCard } from '@/components/dashboard';
+import { DashboardCard, TableRowSkeleton } from '@/components/dashboard';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { mockAdminUsers } from '@/data/mockAdminUsers';
+import { useMockLoading } from '@/hooks/useMockLoading';
 import { formatDateTime } from '@/lib/format';
 import type { UserRole } from '@/types/domain';
 
@@ -14,6 +15,8 @@ const ROLE_LABEL: Record<UserRole, string> = {
   VIEWER: '조회자',
 };
 
+const ACCOUNTS_TABLE_COLUMN_COUNT = 5;
+
 /**
  * 어드민 계정 관리 페이지
  *
@@ -21,6 +24,8 @@ const ROLE_LABEL: Record<UserRole, string> = {
  * Chapter 1은 mock 데이터로 UI만 검증하며, 실제 권한 재검증은 Chapter 4 API 레이어에서 수행
  */
 export default function AccountsPage() {
+  const isLoading = useMockLoading();
+
   return (
     <div className="mx-auto max-w-6xl">
       <SectionTitle title="계정 관리" subtitle="어드민 계정과 역할을 관리합니다" />
@@ -44,19 +49,27 @@ export default function AccountsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockAdminUsers.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-semibold text-[var(--foreground)]">{user.name}</TableCell>
-                <TableCell className="text-[var(--foreground-muted)]">{user.email}</TableCell>
-                <TableCell>
-                  <Badge text={ROLE_LABEL[user.role]} variant={user.role === 'SUPER_ADMIN' ? 'active' : 'tech'} />
-                </TableCell>
-                <TableCell>
-                  <Badge text={user.isActive ? '활성' : '비활성'} variant={user.isActive ? 'done' : 'tech'} />
-                </TableCell>
-                <TableCell>{formatDateTime(user.lastLoginAt)}</TableCell>
-              </TableRow>
-            ))}
+            {isLoading ? (
+              <>
+                <TableRowSkeleton columns={ACCOUNTS_TABLE_COLUMN_COUNT} />
+                <TableRowSkeleton columns={ACCOUNTS_TABLE_COLUMN_COUNT} />
+                <TableRowSkeleton columns={ACCOUNTS_TABLE_COLUMN_COUNT} />
+              </>
+            ) : (
+              mockAdminUsers.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-semibold text-[var(--foreground)]">{user.name}</TableCell>
+                  <TableCell className="text-[var(--foreground-muted)]">{user.email}</TableCell>
+                  <TableCell>
+                    <Badge text={ROLE_LABEL[user.role]} variant={user.role === 'SUPER_ADMIN' ? 'active' : 'tech'} />
+                  </TableCell>
+                  <TableCell>
+                    <Badge text={user.isActive ? '활성' : '비활성'} variant={user.isActive ? 'done' : 'tech'} />
+                  </TableCell>
+                  <TableCell>{formatDateTime(user.lastLoginAt)}</TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </DashboardCard>

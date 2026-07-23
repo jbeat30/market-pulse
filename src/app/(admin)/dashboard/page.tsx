@@ -2,9 +2,18 @@
 
 import { useState } from 'react';
 import { Activity, PackageCheck, ListChecks, Clock } from 'lucide-react';
-import { QuickSearchBar, StatCard, DashboardCard, LiveProgressBar, ExcelExportButton } from '@/components/dashboard';
+import {
+  QuickSearchBar,
+  StatCard,
+  DashboardCard,
+  LiveProgressBar,
+  ExcelExportButton,
+  StatCardSkeleton,
+  CrawlJobCardSkeleton,
+} from '@/components/dashboard';
 import { SectionTitle, Badge } from '@/components/common';
 import { useDashboardStore } from '@/stores/useDashboardStore';
+import { useMockLoading } from '@/hooks/useMockLoading';
 import { mockCategories } from '@/data/mockCategories';
 import { mockCrawlJobs } from '@/data/mockCrawlJobs';
 import { formatDateTime, getCrawlStatusMeta } from '@/lib/format';
@@ -16,6 +25,7 @@ export default function DashboardPage() {
   const selectedKeyword = useDashboardStore((state) => state.selectedKeyword);
   const setSelectedKeyword = useDashboardStore((state) => state.setSelectedKeyword);
 
+  const isLoading = useMockLoading();
   const [isSearching, setIsSearching] = useState(false);
 
   const runningJobs = mockCrawlJobs.filter((job) => job.status === 'RUNNING');
@@ -44,10 +54,21 @@ export default function DashboardPage() {
       />
 
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="진행 중인 크롤" value={String(runningJobs.length)} icon={<Activity className="h-4 w-4" />} />
-        <StatCard label="완료" value={String(completedCount)} icon={<PackageCheck className="h-4 w-4" />} />
-        <StatCard label="누적 수집 상품" value={totalItemsToday.toLocaleString('ko-KR')} icon={<ListChecks className="h-4 w-4" />} />
-        <StatCard label="실패" value={String(failedCount)} icon={<Clock className="h-4 w-4" />} />
+        {isLoading ? (
+          <>
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+          </>
+        ) : (
+          <>
+            <StatCard label="진행 중인 크롤" value={String(runningJobs.length)} icon={<Activity className="h-4 w-4" />} />
+            <StatCard label="완료" value={String(completedCount)} icon={<PackageCheck className="h-4 w-4" />} />
+            <StatCard label="누적 수집 상품" value={totalItemsToday.toLocaleString('ko-KR')} icon={<ListChecks className="h-4 w-4" />} />
+            <StatCard label="실패" value={String(failedCount)} icon={<Clock className="h-4 w-4" />} />
+          </>
+        )}
       </div>
 
       <div className="mt-8 flex items-center justify-between">
@@ -56,23 +77,29 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-4 flex flex-col gap-3">
-        {runningJobs.length === 0 && (
+        {isLoading ? (
+          <>
+            <CrawlJobCardSkeleton />
+            <CrawlJobCardSkeleton />
+          </>
+        ) : runningJobs.length === 0 ? (
           <DashboardCard className="!p-6 text-center text-[13px] text-[var(--foreground-subtle)]">
             진행 중인 크롤 작업이 없습니다
           </DashboardCard>
-        )}
-        {runningJobs.map((job) => (
-          <DashboardCard key={job.id} className="!p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-[14px] font-bold text-[var(--foreground)]">{job.keyword}</span>
-                {job.categoryName && <Badge text={job.categoryName} variant="tech" />}
+        ) : (
+          runningJobs.map((job) => (
+            <DashboardCard key={job.id} className="!p-5">
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-[14px] font-bold text-[var(--foreground)]">{job.keyword}</span>
+                  {job.categoryName && <Badge text={job.categoryName} variant="tech" />}
+                </div>
+                <span className="text-[12px] text-[var(--foreground-subtle)]">{formatDateTime(job.startedAt)} 시작</span>
               </div>
-              <span className="text-[12px] text-[var(--foreground-subtle)]">{formatDateTime(job.startedAt)} 시작</span>
-            </div>
-            <LiveProgressBar progress={job.progress} label={`${getCrawlStatusMeta(job.status).label} · 페이지 ${job.currentPage}/${job.totalPages}`} />
-          </DashboardCard>
-        ))}
+              <LiveProgressBar progress={job.progress} label={`${getCrawlStatusMeta(job.status).label} · 페이지 ${job.currentPage}/${job.totalPages}`} />
+            </DashboardCard>
+          ))
+        )}
       </div>
     </div>
   );

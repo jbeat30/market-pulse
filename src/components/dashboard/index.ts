@@ -6,3 +6,4 @@ export { ExcelExportButton } from './ExcelExportButton';
 export { SpecInspectionDrawer } from './SpecInspectionDrawer';
 export { AdminSidebar } from './AdminSidebar';
 export { AdminHeader } from './AdminHeader';
+export { StatCardSkeleton, CrawlJobCardSkeleton, TableRowSkeleton } from './DashboardSkeleton';

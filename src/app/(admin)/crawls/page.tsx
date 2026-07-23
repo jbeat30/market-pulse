@@ -3,13 +3,16 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { SectionTitle, Badge } from '@/components/common';
-import { DashboardCard, LiveProgressBar, SpecInspectionDrawer, ExcelExportButton } from '@/components/dashboard';
+import { DashboardCard, LiveProgressBar, SpecInspectionDrawer, ExcelExportButton, TableRowSkeleton } from '@/components/dashboard';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { mockCrawlJobs } from '@/data/mockCrawlJobs';
 import { mockProducts } from '@/data/mockProducts';
 import { useDashboardStore } from '@/stores/useDashboardStore';
+import { useMockLoading } from '@/hooks/useMockLoading';
 import { formatDateTime, formatPrice, getCrawlStatusMeta } from '@/lib/format';
 import type { CrawlJob } from '@/types/domain';
+
+const CRAWLS_TABLE_COLUMN_COUNT = 7;
 
 /** 크롤 이력 페이지 — 잡 목록 + 완료 잡 클릭 시 수집 상품을 드로어에서 열람 */
 export default function CrawlsPage() {
@@ -17,6 +20,7 @@ export default function CrawlsPage() {
   const inspectedProductId = useDashboardStore((state) => state.inspectedProductId);
   const openInspection = useDashboardStore((state) => state.openInspection);
   const closeInspection = useDashboardStore((state) => state.closeInspection);
+  const isLoading = useMockLoading();
 
   const jobProducts = selectedJob ? mockProducts.filter((product) => product.crawlJobId === selectedJob.id) : [];
   const inspectedProduct = mockProducts.find((product) => product.id === inspectedProductId) ?? null;
@@ -39,37 +43,41 @@ export default function CrawlsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockCrawlJobs.map((job) => {
-              const statusMeta = getCrawlStatusMeta(job.status);
-              return (
-                <TableRow
-                  key={job.id}
-                  className="cursor-pointer"
-                  onClick={() => setSelectedJob(job)}
-                >
-                  <TableCell className="font-semibold text-[var(--foreground)]">{job.keyword}</TableCell>
-                  <TableCell>{job.categoryName ?? '-'}</TableCell>
-                  <TableCell>
-                    <Badge text={statusMeta.label} variant={statusMeta.badgeVariant} />
-                  </TableCell>
-                  <TableCell>{job.totalItems.toLocaleString('ko-KR')}개</TableCell>
-                  <TableCell>{formatDateTime(job.createdAt)}</TableCell>
-                  <TableCell>{job.createdByName ?? '-'}</TableCell>
-                  <TableCell className="text-right">
-                    {job.status === 'RUNNING' && (
-                      <button
-                        type="button"
-                        onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center gap-1 text-[12px] font-semibold text-[var(--foreground-subtle)] hover:text-red-500"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                        취소
-                      </button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {isLoading ? (
+              <>
+                <TableRowSkeleton columns={CRAWLS_TABLE_COLUMN_COUNT} />
+                <TableRowSkeleton columns={CRAWLS_TABLE_COLUMN_COUNT} />
+                <TableRowSkeleton columns={CRAWLS_TABLE_COLUMN_COUNT} />
+              </>
+            ) : (
+              mockCrawlJobs.map((job) => {
+                const statusMeta = getCrawlStatusMeta(job.status);
+                return (
+                  <TableRow key={job.id} className="cursor-pointer" onClick={() => setSelectedJob(job)}>
+                    <TableCell className="font-semibold text-[var(--foreground)]">{job.keyword}</TableCell>
+                    <TableCell>{job.categoryName ?? '-'}</TableCell>
+                    <TableCell>
+                      <Badge text={statusMeta.label} variant={statusMeta.badgeVariant} />
+                    </TableCell>
+                    <TableCell>{job.totalItems.toLocaleString('ko-KR')}개</TableCell>
+                    <TableCell>{formatDateTime(job.createdAt)}</TableCell>
+                    <TableCell>{job.createdByName ?? '-'}</TableCell>
+                    <TableCell className="text-right">
+                      {job.status === 'RUNNING' && (
+                        <button
+                          type="button"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 text-[12px] font-semibold text-[var(--foreground-subtle)] hover:text-red-500"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                          취소
+                        </button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </DashboardCard>

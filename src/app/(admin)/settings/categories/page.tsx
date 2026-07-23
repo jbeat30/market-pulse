@@ -3,11 +3,14 @@
 import { useState } from 'react';
 import { Plus, Pencil } from 'lucide-react';
 import { SectionTitle, Badge } from '@/components/common';
-import { DashboardCard } from '@/components/dashboard';
+import { DashboardCard, TableRowSkeleton } from '@/components/dashboard';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { mockCategories } from '@/data/mockCategories';
 import { mockKeywords } from '@/data/mockKeywords';
+import { useMockLoading } from '@/hooks/useMockLoading';
 import { formatDateTime } from '@/lib/format';
+
+const KEYWORDS_TABLE_COLUMN_COUNT = 5;
 
 /**
  * 카테고리·키워드 관리 페이지
@@ -18,6 +21,7 @@ import { formatDateTime } from '@/lib/format';
  */
 export default function CategoriesPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const isLoading = useMockLoading();
 
   const filteredKeywords = selectedCategoryId
     ? mockKeywords.filter((keyword) => keyword.categoryId === selectedCategoryId)
@@ -86,23 +90,31 @@ export default function CategoriesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredKeywords.map((keyword) => (
-                <TableRow key={keyword.id}>
-                  <TableCell className="font-semibold text-[var(--foreground)]">{keyword.keyword}</TableCell>
-                  <TableCell>{keyword.categoryName ?? '-'}</TableCell>
-                  <TableCell>{keyword.searchCount}회</TableCell>
-                  <TableCell>{formatDateTime(keyword.lastUsedAt)}</TableCell>
-                  <TableCell className="text-right">
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1 text-[12px] font-semibold text-[var(--foreground-subtle)] hover:text-[var(--brand-primary)]"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                      수정
-                    </button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {isLoading ? (
+                <>
+                  <TableRowSkeleton columns={KEYWORDS_TABLE_COLUMN_COUNT} />
+                  <TableRowSkeleton columns={KEYWORDS_TABLE_COLUMN_COUNT} />
+                  <TableRowSkeleton columns={KEYWORDS_TABLE_COLUMN_COUNT} />
+                </>
+              ) : (
+                filteredKeywords.map((keyword) => (
+                  <TableRow key={keyword.id}>
+                    <TableCell className="font-semibold text-[var(--foreground)]">{keyword.keyword}</TableCell>
+                    <TableCell>{keyword.categoryName ?? '-'}</TableCell>
+                    <TableCell>{keyword.searchCount}회</TableCell>
+                    <TableCell>{formatDateTime(keyword.lastUsedAt)}</TableCell>
+                    <TableCell className="text-right">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 text-[12px] font-semibold text-[var(--foreground-subtle)] hover:text-[var(--brand-primary)]"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        수정
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </DashboardCard>
