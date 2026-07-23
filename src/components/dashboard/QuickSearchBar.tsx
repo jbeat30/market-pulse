@@ -66,7 +66,8 @@ export const QuickSearchBar = ({
         placeholder="검색 키워드를 입력하세요"
         className="flex-1"
         onKeyDown={(e) => {
-          if (e.key === 'Enter' && !isSubmitting) onSearch();
+          // 한글 등 IME 조합 확정 시 발생하는 Enter keydown까지 처리하면 검색이 중복 실행됨
+          if (e.key === 'Enter' && !e.nativeEvent.isComposing && !isSubmitting) onSearch();
         }}
       />
 

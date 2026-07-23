@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { searchNaverShopping, NaverApiError } from './naverClient';
+import { relocateKeywordCategory } from '@/domains/category/service';
 import type { CreateSearchJobInput, ListSearchJobsQuery } from './schema';
 
 /** 검색 작업 목록 조회 — 최근 생성순, 상태 필터 지원 */
@@ -15,8 +16,20 @@ export const listSearchJobs = (query: ListSearchJobsQuery) => {
   });
 };
 
-/** 검색 작업 카테고리 수정 — 검색 시점에 미지정하거나 잘못 지정한 카테고리를 사후 정정 */
-export const updateSearchJobCategory = (id: string, categoryId: string | null) => {
+/**
+ * 검색 작업 카테고리 수정 — 검색 시점에 미지정하거나 잘못 지정한 카테고리를 사후 정정
+ *
+ * @description 연결된 KeywordHistory의 categoryId도 함께 재배치해야 카테고리 관리 탭의
+ * 키워드 카운트·사용횟수가 검색 이력 수정 내용과 어긋나지 않는다
+ */
+export const updateSearchJobCategory = async (id: string, categoryId: string | null) => {
+  const current = await prisma.searchJob.findUnique({ where: { id }, select: { keywordId: true } });
+  if (!current) throw new Error('검색 작업을 찾을 수 없습니다');
+
+  if (current.keywordId) {
+    await relocateKeywordCategory(current.keywordId, categoryId);
+  }
+
   return prisma.searchJob.update({
     where: { id },
     data: { categoryId },
