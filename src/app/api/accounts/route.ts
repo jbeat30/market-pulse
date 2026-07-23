@@ -3,9 +3,9 @@ import { listAccounts, createAccount, DuplicateUserIdError } from '@/domains/acc
 import { createAccountSchema } from '@/domains/account/schema';
 import { requireAuth } from '@/lib/apiAuth';
 
-/** GET /api/accounts — 전체 계정 목록 조회 */
+/** GET /api/accounts — 전체 계정 목록 조회, VIEWER는 접근 불가(계정관리 화면 전체 비공개) */
 export async function GET() {
-  const { response } = await requireAuth();
+  const { response } = await requireAuth(['SUPER_ADMIN', 'ADMIN']);
   if (response) return response;
 
   const accounts = await listAccounts();

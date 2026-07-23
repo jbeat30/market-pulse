@@ -15,6 +15,18 @@ export const listSearchJobs = (query: ListSearchJobsQuery) => {
   });
 };
 
+/** 검색 작업 카테고리 수정 — 검색 시점에 미지정하거나 잘못 지정한 카테고리를 사후 정정 */
+export const updateSearchJobCategory = (id: string, categoryId: string | null) => {
+  return prisma.searchJob.update({
+    where: { id },
+    data: { categoryId },
+    include: {
+      category: { select: { name: true } },
+      createdBy: { select: { name: true } },
+    },
+  });
+};
+
 /** 단일 검색 작업 조회 — 상세 화면·폴링용 */
 export const getSearchJobById = (id: string) => {
   return prisma.searchJob.findUnique({

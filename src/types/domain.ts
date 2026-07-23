@@ -41,6 +41,7 @@ export interface SearchJob {
   id: string;
   status: SearchJobStatus;
   keyword: string;
+  categoryId: string | null;
   categoryName: string | null;
   requestedCount: number;
   collectedCount: number;

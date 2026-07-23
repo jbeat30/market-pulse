@@ -168,7 +168,7 @@ export default function AccountsPage() {
               <Label className="mb-2">역할</Label>
               <Select value={role} onValueChange={(value) => setRole(value as UserRole)}>
                 <SelectTrigger className="w-full" aria-label="역할 선택">
-                  <SelectValue />
+                  <SelectValue>{(value: UserRole) => ROLE_LABEL[value]}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="SUPER_ADMIN">최고 관리자</SelectItem>

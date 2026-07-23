@@ -41,6 +41,12 @@ export default function CategoriesPage() {
       ),
   });
 
+  // "전체" 카운트는 카테고리별 keywordCount 합산이 아니라 카테고리 미지정 키워드까지 포함한 실제 전체 개수 필요
+  const { data: allKeywords } = useQuery({
+    queryKey: ['keywords', null],
+    queryFn: () => apiFetch<KeywordHistory[]>('/api/keywords'),
+  });
+
   const createMutation = useMutation({
     mutationFn: () =>
       apiFetch<Category>('/api/categories', {
@@ -63,7 +69,7 @@ export default function CategoriesPage() {
     createMutation.mutate();
   };
 
-  const totalKeywordCount = (categories ?? []).reduce((sum, category) => sum + category.keywordCount, 0);
+  const totalKeywordCount = allKeywords?.length ?? 0;
 
   return (
     <div className="mx-auto max-w-6xl">

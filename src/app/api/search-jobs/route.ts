@@ -24,6 +24,7 @@ export async function GET(request: Request) {
     id: job.id,
     status: job.status,
     keyword: job.keyword,
+    categoryId: job.categoryId,
     categoryName: job.category?.name ?? null,
     requestedCount: job.requestedCount,
     collectedCount: job.collectedCount,

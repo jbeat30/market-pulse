@@ -66,6 +66,6 @@ export const upsertKeyword = async (input: CreateKeywordInput) => {
   }
 
   return prisma.keywordHistory.create({
-    data: { keyword: input.keyword, categoryId: input.categoryId ?? null },
+    data: { keyword: input.keyword, categoryId: input.categoryId ?? null, searchCount: 1 },
   });
 };
