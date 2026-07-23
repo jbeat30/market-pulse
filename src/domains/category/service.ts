@@ -31,8 +31,8 @@ export const updateCategory = (id: string, input: UpdateCategoryInput) => {
 /**
  * 카테고리 삭제
  *
- * @description KeywordHistory/CrawlJob의 categoryId는 onDelete: SetNull이라
- * 삭제해도 잡 이력은 보존되고 참조만 null로 바뀐다(감사 추적 유지)
+ * @description KeywordHistory/SearchJob의 categoryId는 onDelete: SetNull이라
+ * 삭제해도 검색 작업 이력은 보존되고 참조만 null로 바뀐다(감사 추적 유지)
  */
 export const deleteCategory = (id: string) => {
   return prisma.category.delete({ where: { id } });

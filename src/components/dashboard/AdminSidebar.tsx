@@ -13,7 +13,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: '대시보드', icon: LayoutDashboard },
-  { href: '/crawls', label: '크롤 이력', icon: History },
+  { href: '/search-jobs', label: '검색 이력', icon: History },
   { href: '/settings/categories', label: '카테고리', icon: Tag },
   { href: '/settings/accounts', label: '계정 관리', icon: Users },
 ];

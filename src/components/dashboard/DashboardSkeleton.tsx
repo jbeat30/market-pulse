@@ -10,8 +10,8 @@ export const StatCardSkeleton = () => (
   </DashboardCard>
 );
 
-/** 진행 중 크롤 카드 1건 자리의 로딩 스켈레톤 */
-export const CrawlJobCardSkeleton = () => (
+/** 진행 중 검색 작업 카드 1건 자리의 로딩 스켈레톤 */
+export const SearchJobCardSkeleton = () => (
   <DashboardCard className="!p-5">
     <div className="mb-3 flex items-center justify-between">
       <Skeleton className="h-4 w-24" />
@@ -21,7 +21,7 @@ export const CrawlJobCardSkeleton = () => (
   </DashboardCard>
 );
 
-/** 표 형태 목록(크롤 이력, 계정 등) 행 로딩 스켈레톤 */
+/** 표 형태 목록(검색 이력, 계정 등) 행 로딩 스켈레톤 */
 export const TableRowSkeleton = ({ columns = 5 }: { columns?: number }) => (
   <tr>
     {Array.from({ length: columns }).map((_, i) => (

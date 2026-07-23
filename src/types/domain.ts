@@ -1,13 +1,13 @@
 /**
  * 도메인 타입 정의
  *
- * @description Chapter 2에서 Prisma 스키마가 생성되면 Prisma 타입을 SSOT로 전환한다.
- * 현재는 03-database-schema.md 설계를 기준으로 한 프론트엔드 전용 타입
+ * @description prisma/schema.prisma를 기준으로 한 프론트엔드 전용 타입.
+ * 네이버 쇼핑 검색 API(openapi.naver.com/v1/search/shop.json) 기반 — Playwright 크롤링 아님
  */
 
 export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'VIEWER';
 
-export type CrawlStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+export type SearchJobStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
 export interface AdminUser {
   id: string;
@@ -37,15 +37,14 @@ export interface KeywordHistory {
   lastUsedAt: string;
 }
 
-export interface CrawlJob {
+export interface SearchJob {
   id: string;
-  status: CrawlStatus;
+  status: SearchJobStatus;
   keyword: string;
   categoryName: string | null;
-  totalPages: number;
-  currentPage: number;
+  requestedCount: number;
+  collectedCount: number;
   progress: number;
-  totalItems: number;
   errorMessage: string | null;
   startedAt: string | null;
   finishedAt: string | null;
@@ -53,29 +52,22 @@ export interface CrawlJob {
   createdByName: string | null;
 }
 
-export interface ProductSpec {
-  specKey: string;
-  specValue: string;
-}
-
-export interface ProductDetailContent {
-  textContent: string | null;
-}
-
 export interface Product {
   id: string;
-  crawlJobId: string;
+  searchJobId: string;
   naverProductId: string | null;
   title: string;
   price: number | null;
+  highPrice: number | null;
   mallName: string | null;
-  productUrl: string | null;
+  productUrl: string;
   imageUrl: string | null;
-  shippingFee: number | null;
-  installFee: number | null;
+  brand: string | null;
+  maker: string | null;
+  naverProductType: string | null;
+  naverCategory1: string | null;
+  naverCategory2: string | null;
+  naverCategory3: string | null;
+  naverCategory4: string | null;
   rank: number | null;
-  page: number | null;
-  isAd: boolean;
-  specs: ProductSpec[];
-  detailContent: ProductDetailContent | null;
 }
