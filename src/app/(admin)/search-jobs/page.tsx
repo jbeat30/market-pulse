@@ -9,7 +9,6 @@ import {
   ExcelExportButton,
   FilterPanel,
 } from '@/components/dashboard';
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { apiFetch } from '@/lib/apiClient';
@@ -18,52 +17,17 @@ import type { Category, Product, SearchJob } from '@/types/domain';
 
 const UNCATEGORIZED_GROUP_KEY = '__uncategorized__';
 const UNCATEGORIZED_LABEL = '카테고리 미지정';
+const ALL_CATEGORY_FILTER_VALUE = '__all__';
 
 interface SearchJobDetail extends SearchJob {
   products: Product[];
 }
 
-/** 검색 시각(YYYY-MM-DD, KST) 기준 날짜 키 추출 */
-const toDateKey = (iso: string) =>
-  new Date(iso).toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' }); // sv-SE 로케일이 YYYY-MM-DD 형식을 그대로 반환
-
-interface CategoryGroup {
-  key: string;
-  label: string;
-  dateGroups: { date: string; jobs: SearchJob[] }[];
-}
-
-/** 검색 작업 목록을 카테고리 → 날짜 순으로 그룹핑(같은 카테고리끼리, 같은 날짜끼리 모아 아코디언으로 표시) */
-const groupJobsByCategoryAndDate = (jobs: SearchJob[]): CategoryGroup[] => {
-  const byCategory = new Map<string, { label: string; jobs: SearchJob[] }>();
-
-  for (const job of jobs) {
-    const key = job.categoryId ?? UNCATEGORIZED_GROUP_KEY;
-    const label = job.categoryName ?? UNCATEGORIZED_LABEL;
-    if (!byCategory.has(key)) byCategory.set(key, { label, jobs: [] });
-    byCategory.get(key)!.jobs.push(job);
-  }
-
-  return [...byCategory.entries()].map(([key, { label, jobs: categoryJobs }]) => {
-    const byDate = new Map<string, SearchJob[]>();
-    for (const job of categoryJobs) {
-      const dateKey = toDateKey(job.createdAt);
-      if (!byDate.has(dateKey)) byDate.set(dateKey, []);
-      byDate.get(dateKey)!.push(job);
-    }
-
-    const dateGroups = [...byDate.entries()]
-      .sort(([a], [b]) => b.localeCompare(a)) // 최신 날짜 먼저
-      .map(([date, dateJobs]) => ({ date, jobs: dateJobs }));
-
-    return { key, label, dateGroups };
-  });
-};
-
 /** 검색 이력 페이지 — 카테고리→날짜 아코디언, 작업 클릭 시 필터 패널 + 수집 상품 목록 */
 export default function SearchJobsPage() {
   const queryClient = useQueryClient();
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState(ALL_CATEGORY_FILTER_VALUE);
   const inspectedProductId = useDashboardStore((state) => state.inspectedProductId);
   const openInspection = useDashboardStore((state) => state.openInspection);
   const closeInspection = useDashboardStore((state) => state.closeInspection);
@@ -98,7 +62,13 @@ export default function SearchJobsPage() {
     },
   });
 
-  const categoryGroups = useMemo(() => groupJobsByCategoryAndDate(jobs ?? []), [jobs]);
+  const activeCategories = (categories ?? []).filter((category) => category.isActive);
+
+  const filteredJobs = useMemo(() => {
+    if (categoryFilter === ALL_CATEGORY_FILTER_VALUE) return jobs ?? [];
+    const targetId = categoryFilter === UNCATEGORIZED_GROUP_KEY ? null : categoryFilter;
+    return (jobs ?? []).filter((job) => job.categoryId === targetId);
+  }, [jobs, categoryFilter]);
 
   const jobProducts = (selectedJob?.products ?? [])
     .filter((product) => filter.minPrice === null || (product.price ?? 0) >= filter.minPrice)
@@ -107,68 +77,73 @@ export default function SearchJobsPage() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <SectionTitle title="검색 이력" subtitle="카테고리·날짜별로 묶인 검색 작업을 확인하세요" />
+      <SectionTitle title="검색 이력" subtitle="실행된 검색 작업을 확인하세요" />
+
+      {activeCategories.length > 0 && (
+        <div className="mb-3 flex items-center gap-2">
+          <Select
+            value={categoryFilter}
+            onValueChange={(value) => setCategoryFilter(value ?? ALL_CATEGORY_FILTER_VALUE)}
+          >
+            <SelectTrigger className="w-full sm:w-[200px]" aria-label="카테고리 필터">
+              <SelectValue>
+                {(value: string) => {
+                  if (value === ALL_CATEGORY_FILTER_VALUE) return '전체';
+                  if (value === UNCATEGORIZED_GROUP_KEY) return UNCATEGORIZED_LABEL;
+                  return activeCategories.find((c) => c.id === value)?.name ?? value;
+                }}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_CATEGORY_FILTER_VALUE}>전체</SelectItem>
+              <SelectItem value={UNCATEGORIZED_GROUP_KEY}>{UNCATEGORIZED_LABEL}</SelectItem>
+              {activeCategories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <DashboardCard className="!p-2">
         {isLoading ? (
           <p className="px-3 py-4 text-[13px] text-[var(--foreground-subtle)]">불러오는 중...</p>
-        ) : categoryGroups.length === 0 ? (
-          <p className="px-3 py-4 text-[13px] text-[var(--foreground-subtle)]">실행된 검색 작업이 없습니다</p>
+        ) : filteredJobs.length === 0 ? (
+          <p className="px-3 py-4 text-[13px] text-[var(--foreground-subtle)]">
+            {jobs && jobs.length > 0 ? '조건에 맞는 검색 작업이 없습니다' : '실행된 검색 작업이 없습니다'}
+          </p>
         ) : (
-          <Accordion multiple className="px-2">
-            {categoryGroups.map((group) => (
-              <AccordionItem key={group.key} value={group.key}>
-                <AccordionTrigger className="px-2">
-                  <span className="text-[14px] font-bold text-[var(--foreground)]">{group.label}</span>
-                  <span className="mr-2 text-[12px] font-normal text-[var(--foreground-subtle)]">
-                    {group.dateGroups.reduce((sum, d) => sum + d.jobs.length, 0)}건
+          <div className="flex flex-col divide-y divide-[var(--border)]">
+            {filteredJobs.map((job) => {
+              const statusMeta = getSearchJobStatusMeta(job.status);
+              return (
+                <button
+                  key={job.id}
+                  type="button"
+                  onClick={() => setSelectedJobId(job.id)}
+                  className={`flex items-center justify-between py-2.5 px-3 text-left text-[13px] hover:bg-[var(--background-muted)] ${
+                    selectedJobId === job.id ? 'bg-[var(--brand-subtle)]' : ''
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="font-semibold text-[var(--foreground)]">{job.keyword}</span>
+                    <Badge text={statusMeta.label} variant={statusMeta.badgeVariant} />
+                    <span className="text-[12px] text-[var(--foreground-subtle)]">
+                      {job.categoryName ?? UNCATEGORIZED_LABEL}
+                    </span>
                   </span>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <Accordion multiple className="pl-4">
-                    {group.dateGroups.map(({ date, jobs: dateJobs }) => (
-                      <AccordionItem key={date} value={date}>
-                        <AccordionTrigger className="px-2 text-[13px]">
-                          <span className="text-[var(--foreground-muted)]">{date}</span>
-                          <span className="mr-2 text-[12px] font-normal text-[var(--foreground-subtle)]">
-                            {dateJobs.length}건
-                          </span>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="flex flex-col divide-y divide-[var(--border)] pl-2">
-                            {dateJobs.map((job) => {
-                              const statusMeta = getSearchJobStatusMeta(job.status);
-                              return (
-                                <button
-                                  key={job.id}
-                                  type="button"
-                                  onClick={() => setSelectedJobId(job.id)}
-                                  className={`flex items-center justify-between py-2.5 px-2 text-left text-[13px] hover:bg-[var(--background-muted)] ${
-                                    selectedJobId === job.id ? 'bg-[var(--brand-subtle)]' : ''
-                                  }`}
-                                >
-                                  <span className="flex items-center gap-2">
-                                    <span className="font-semibold text-[var(--foreground)]">{job.keyword}</span>
-                                    <Badge text={statusMeta.label} variant={statusMeta.badgeVariant} />
-                                  </span>
-                                  <span className="flex items-center gap-3 text-[var(--foreground-subtle)]">
-                                    <span>
-                                      {job.collectedCount}/{job.requestedCount}개
-                                    </span>
-                                    <span>{formatDateTime(job.createdAt)}</span>
-                                  </span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+                  <span className="flex items-center gap-3 text-[var(--foreground-subtle)]">
+                    <span>
+                      {job.collectedCount}/{job.requestedCount}개
+                    </span>
+                    <span>{formatDateTime(job.createdAt)}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         )}
       </DashboardCard>
 
