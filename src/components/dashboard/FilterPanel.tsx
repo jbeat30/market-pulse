@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 interface ProductFilter {
   minPrice: number | null;
   maxPrice: number | null;
-  excludeAds: boolean;
 }
 
 interface FilterPanelProps {
@@ -15,7 +14,7 @@ interface FilterPanelProps {
   onReset: () => void;
 }
 
-/** 상품 필터 패널 — 가격 범위·광고 제외. border 없이 카드 톤으로 배경 구분 */
+/** 상품 필터 패널 — 가격 범위. border 없이 카드 톤으로 배경 구분 */
 export const FilterPanel = ({ filter, onChange, onReset }: FilterPanelProps) => {
   return (
     <div className="toss-card !p-5">
@@ -30,37 +29,25 @@ export const FilterPanel = ({ filter, onChange, onReset }: FilterPanelProps) => 
         </button>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <Label className="mb-2 text-[13px] text-[var(--foreground-muted)]">가격 범위</Label>
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              inputMode="numeric"
-              placeholder="최소"
-              value={filter.minPrice ?? ''}
-              onChange={(e) => onChange({ minPrice: e.target.value === '' ? null : Number(e.target.value) })}
-            />
-            <span className="text-[var(--foreground-subtle)]">~</span>
-            <Input
-              type="number"
-              inputMode="numeric"
-              placeholder="최대"
-              value={filter.maxPrice ?? ''}
-              onChange={(e) => onChange({ maxPrice: e.target.value === '' ? null : Number(e.target.value) })}
-            />
-          </div>
-        </div>
-
-        <label className="flex items-center gap-2 text-[13px] text-[var(--foreground-muted)]">
-          <input
-            type="checkbox"
-            checked={filter.excludeAds}
-            onChange={(e) => onChange({ excludeAds: e.target.checked })}
-            className="h-4 w-4 rounded border-[var(--border-strong)] accent-[var(--brand-primary)]"
+      <div>
+        <Label className="mb-2 text-[13px] text-[var(--foreground-muted)]">가격 범위</Label>
+        <div className="flex items-center gap-2">
+          <Input
+            type="number"
+            inputMode="numeric"
+            placeholder="최소"
+            value={filter.minPrice ?? ''}
+            onChange={(e) => onChange({ minPrice: e.target.value === '' ? null : Number(e.target.value) })}
           />
-          광고 상품 제외
-        </label>
+          <span className="text-[var(--foreground-subtle)]">~</span>
+          <Input
+            type="number"
+            inputMode="numeric"
+            placeholder="최대"
+            value={filter.maxPrice ?? ''}
+            onChange={(e) => onChange({ maxPrice: e.target.value === '' ? null : Number(e.target.value) })}
+          />
+        </div>
       </div>
     </div>
   );

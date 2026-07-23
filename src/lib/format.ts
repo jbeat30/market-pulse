@@ -1,4 +1,4 @@
-import type { CrawlStatus } from '@/types/domain';
+import type { SearchJobStatus } from '@/types/domain';
 
 /** 원화 가격 포맷 — null은 "가격 정보 없음"으로 표시 */
 export const formatPrice = (price: number | null): string => {
@@ -19,12 +19,12 @@ export const formatDateTime = (iso: string | null): string => {
   });
 };
 
-interface CrawlStatusMeta {
+interface SearchJobStatusMeta {
   label: string;
   badgeVariant: 'active' | 'done' | 'tech';
 }
 
-const CRAWL_STATUS_META: Record<CrawlStatus, CrawlStatusMeta> = {
+const SEARCH_JOB_STATUS_META: Record<SearchJobStatus, SearchJobStatusMeta> = {
   PENDING: { label: '대기 중', badgeVariant: 'tech' },
   RUNNING: { label: '진행 중', badgeVariant: 'active' },
   COMPLETED: { label: '완료', badgeVariant: 'done' },
@@ -32,5 +32,6 @@ const CRAWL_STATUS_META: Record<CrawlStatus, CrawlStatusMeta> = {
   CANCELLED: { label: '취소됨', badgeVariant: 'tech' },
 };
 
-/** 크롤 상태값을 사용자 표시용 라벨·뱃지 variant로 변환 — 단일 authoritative 매핑 */
-export const getCrawlStatusMeta = (status: CrawlStatus): CrawlStatusMeta => CRAWL_STATUS_META[status];
+/** 검색 작업 상태값을 사용자 표시용 라벨·뱃지 variant로 변환 — 단일 authoritative 매핑 */
+export const getSearchJobStatusMeta = (status: SearchJobStatus): SearchJobStatusMeta =>
+  SEARCH_JOB_STATUS_META[status];
