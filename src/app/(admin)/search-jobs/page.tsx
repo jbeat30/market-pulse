@@ -246,8 +246,8 @@ export default function SearchJobsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-10">No.</TableHead>
-                    <TableHead className="w-14">순위</TableHead>
                     <TableHead>상품명</TableHead>
+                    <TableHead className="w-14">순위</TableHead>
                     <TableHead className="text-right">가격</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -259,14 +259,14 @@ export default function SearchJobsPage() {
                       className="cursor-pointer"
                     >
                       <TableCell className="text-[var(--foreground-subtle)]">{index + 1}</TableCell>
-                      <TableCell className="text-[var(--foreground-subtle)]">
-                        {product.rank ?? '-'}
-                      </TableCell>
                       <TableCell
                         className="max-w-0 w-full truncate font-medium text-[var(--foreground)]"
                         title={product.title}
                       >
                         {product.title}
+                      </TableCell>
+                      <TableCell className="text-[var(--foreground-subtle)]">
+                        {product.rank ?? '-'}
                       </TableCell>
                       <TableCell className="text-right font-semibold text-[var(--brand-primary)]">
                         {formatPrice(product.price)}
