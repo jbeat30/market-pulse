@@ -173,7 +173,6 @@ export default function CategoriesPage() {
                   </button>
 
                   <div className="flex items-center gap-1">
-                    <span className="text-[12px] text-[var(--foreground-subtle)]">{category.keywordCount}개</span>
                     {canManageCategories && (
                       <span className="flex items-center opacity-0 transition-opacity group-hover:opacity-100">
                         <button
@@ -198,6 +197,7 @@ export default function CategoriesPage() {
                         </button>
                       </span>
                     )}
+                    <span className="text-[12px] text-[var(--foreground-subtle)]">{category.keywordCount}개</span>
                   </div>
                 </div>
               ))
