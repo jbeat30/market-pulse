@@ -35,7 +35,7 @@ export const AdminSidebar = () => {
   const visibleNavItems = NAV_ITEMS.filter((item) => !item.visibleToRoles || item.visibleToRoles.includes(role ?? ''));
 
   return (
-    <aside className="hidden w-60 shrink-0 flex-col border-r border-[var(--border)] bg-[var(--background)] px-4 py-6 md:flex">
+    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-[var(--border)] bg-[var(--background)] px-4 py-6 md:flex">
       <Link href="/dashboard" className="mb-8 px-2">
         <span className="font-emphasis text-[18px] font-bold text-[var(--foreground)]" style={{ letterSpacing: '-0.02em' }}>
           market-pulse

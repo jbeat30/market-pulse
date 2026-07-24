@@ -10,6 +10,7 @@ import {
   FilterPanel,
 } from '@/components/dashboard';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useDashboardStore } from '@/stores/useDashboardStore';
 import { apiFetch } from '@/lib/apiClient';
 import { formatDateTime, formatPrice, getSearchJobStatusMeta } from '@/lib/format';
@@ -18,6 +19,26 @@ import type { Category, Product, SearchJob } from '@/types/domain';
 const UNCATEGORIZED_GROUP_KEY = '__uncategorized__';
 const UNCATEGORIZED_LABEL = '카테고리 미지정';
 const ALL_CATEGORY_FILTER_VALUE = '__all__';
+
+type ProductSortKey = 'rank' | 'priceAsc' | 'priceDesc';
+
+const SORT_OPTIONS: { value: ProductSortKey; label: string }[] = [
+  { value: 'rank', label: '순위순' },
+  { value: 'priceAsc', label: '가격 낮은순' },
+  { value: 'priceDesc', label: '가격 높은순' },
+];
+
+const sortProducts = (products: Product[], sortKey: ProductSortKey) => {
+  const sorted = [...products];
+  if (sortKey === 'priceAsc') {
+    sorted.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
+  } else if (sortKey === 'priceDesc') {
+    sorted.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity));
+  } else {
+    sorted.sort((a, b) => (a.rank ?? Infinity) - (b.rank ?? Infinity));
+  }
+  return sorted;
+};
 
 interface SearchJobDetail extends SearchJob {
   products: Product[];
@@ -28,6 +49,7 @@ export default function SearchJobsPage() {
   const queryClient = useQueryClient();
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState(ALL_CATEGORY_FILTER_VALUE);
+  const [productSort, setProductSort] = useState<ProductSortKey>('rank');
   const inspectedProductId = useDashboardStore((state) => state.inspectedProductId);
   const openInspection = useDashboardStore((state) => state.openInspection);
   const closeInspection = useDashboardStore((state) => state.closeInspection);
@@ -70,9 +92,12 @@ export default function SearchJobsPage() {
     return (jobs ?? []).filter((job) => job.categoryId === targetId);
   }, [jobs, categoryFilter]);
 
-  const jobProducts = (selectedJob?.products ?? [])
-    .filter((product) => filter.minPrice === null || (product.price ?? 0) >= filter.minPrice)
-    .filter((product) => filter.maxPrice === null || (product.price ?? 0) <= filter.maxPrice);
+  const jobProducts = sortProducts(
+    (selectedJob?.products ?? [])
+      .filter((product) => filter.minPrice === null || (product.price ?? 0) >= filter.minPrice)
+      .filter((product) => filter.maxPrice === null || (product.price ?? 0) <= filter.maxPrice),
+    productSort,
+  );
   const inspectedProduct = jobProducts.find((product) => product.id === inspectedProductId) ?? null;
 
   return (
@@ -195,24 +220,61 @@ export default function SearchJobsPage() {
               </Select>
             </div>
 
+            {jobProducts.length > 0 && (
+              <div className="mb-3 flex items-center justify-end">
+                <Select value={productSort} onValueChange={(value) => setProductSort((value as ProductSortKey) ?? 'rank')}>
+                  <SelectTrigger className="w-[150px]" aria-label="상품 정렬">
+                    <SelectValue>
+                      {(value: ProductSortKey) => SORT_OPTIONS.find((option) => option.value === value)?.label}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SORT_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             {jobProducts.length === 0 ? (
               <p className="text-[13px] text-[var(--foreground-subtle)]">조건에 맞는 상품이 없습니다</p>
             ) : (
-              <div className="flex flex-col divide-y divide-[var(--border)]">
-                {jobProducts.map((product) => (
-                  <button
-                    key={product.id}
-                    type="button"
-                    onClick={() => openInspection(product.id)}
-                    className="flex items-center justify-between py-3 text-left hover:opacity-70"
-                  >
-                    <span className="text-[13.5px] font-medium text-[var(--foreground)]">{product.title}</span>
-                    <span className="text-[13.5px] font-semibold text-[var(--brand-primary)]">
-                      {formatPrice(product.price)}
-                    </span>
-                  </button>
-                ))}
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-10">No.</TableHead>
+                    <TableHead className="w-14">순위</TableHead>
+                    <TableHead>상품명</TableHead>
+                    <TableHead className="text-right">가격</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {jobProducts.map((product, index) => (
+                    <TableRow
+                      key={product.id}
+                      onClick={() => openInspection(product.id)}
+                      className="cursor-pointer"
+                    >
+                      <TableCell className="text-[var(--foreground-subtle)]">{index + 1}</TableCell>
+                      <TableCell className="text-[var(--foreground-subtle)]">
+                        {product.rank ?? '-'}
+                      </TableCell>
+                      <TableCell
+                        className="max-w-0 w-full truncate font-medium text-[var(--foreground)]"
+                        title={product.title}
+                      >
+                        {product.title}
+                      </TableCell>
+                      <TableCell className="text-right font-semibold text-[var(--brand-primary)]">
+                        {formatPrice(product.price)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </DashboardCard>
         </div>
