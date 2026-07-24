@@ -14,8 +14,8 @@ interface ProductDetailDrawerProps {
 /**
  * 네이버 productType 코드를 표시용 라벨로 변환
  *
- * @description 네이버 공식 문서에 정의되지 않은 값이라 관찰 기반 추정 라벨(1=가격비교 카탈로그, mallName 항상 "네이버".
- * 2=개별 판매처 직접등록 상품). 그 외 값은 원본 코드 그대로 노출
+ * @description 네이버 공식 문서에 정의되지 않은 값이라 관찰 기반 추정 라벨
+ * (1=가격비교 카탈로그, 2=개별 판매처 직접등록 상품). 그 외 값은 원본 코드 그대로 노출
  */
 const getProductTypeLabel = (naverProductType: string | null): string | null => {
   if (naverProductType === '1') return '가격비교 카탈로그(추정)';

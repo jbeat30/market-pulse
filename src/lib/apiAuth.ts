@@ -6,7 +6,7 @@ import type { UserRole } from '@/types/domain';
  * API Route Handler 공용 인가 검증
  *
  * @description proxy(구 middleware)가 페이지 라우트를 보호하지만, API도 서버 측에서 별도
- * 세션·역할 재검증 필요(05-security.md 방어 심층 원칙 — 미들웨어만 신뢰 금지).
+ * 세션·역할 재검증 필요(05-security.md 방어 심층 원칙 — 미들웨어만 신뢰 금지)
  * allowedRoles 지정 시 해당 역할 목록에 포함된 경우만 통과, 미지정 시 로그인 여부만 확인
  */
 export const requireAuth = async (allowedRoles?: UserRole | UserRole[]) => {

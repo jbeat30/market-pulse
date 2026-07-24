@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 
 /**
- * localhost / 127.0.0.1 제외 환경에서 개발자 도구 단축키를 차단.
+ * localhost / 127.0.0.1 제외 환경에서 개발자 도구 단축키 차단
  * Mac: Cmd+Option+I/J/C, Cmd+Shift+C
  * Windows/Linux: F12, Ctrl+Shift+I/J/C
  */

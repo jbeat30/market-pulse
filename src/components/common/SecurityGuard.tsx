@@ -8,8 +8,8 @@ import { useEffect } from 'react';
  * @description 사이트 전체 보안 이벤트 차단 담당
  * - 우클릭(contextmenu) 방지
  * - 개발자도구 단축키(F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U) 차단
- * SSR 환경에서는 실행되지 않도록 useEffect 내에서만 이벤트 등록.
- * 이는 UX 억제책일 뿐 진짜 방어가 아니다 — 실질 방어는 서버 인증·인가·시크릿 격리다
+ * SSR 환경에서는 실행되지 않도록 useEffect 내에서만 이벤트 등록
+ * 이는 UX 억제책일 뿐 진짜 방어가 아님 — 실질 방어는 서버 인증·인가·시크릿 격리
  */
 export const SecurityGuard = () => {
   useEffect(() => {
