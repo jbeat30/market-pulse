@@ -20,7 +20,7 @@ export const listSearchJobs = (query: ListSearchJobsQuery) => {
  * 검색 작업 카테고리 수정 — 검색 시점에 미지정하거나 잘못 지정한 카테고리를 사후 정정
  *
  * @description 연결된 KeywordHistory의 categoryId도 함께 재배치해야 카테고리 관리 탭의
- * 키워드 카운트·사용횟수가 검색 이력 수정 내용과 어긋나지 않는다
+ * 키워드 카운트·사용횟수가 검색 이력 수정 내용과 어긋나지 않도록 함
  */
 export const updateSearchJobCategory = async (id: string, categoryId: string | null) => {
   const current = await prisma.searchJob.findUnique({ where: { id }, select: { keywordId: true } });
@@ -55,8 +55,8 @@ export const getSearchJobById = (id: string) => {
 /**
  * 검색 작업 생성 및 즉시 실행
  *
- * @description PENDING 생성 → RUNNING 전이 → 네이버 쇼핑 검색 API 호출 → 결과 저장 → COMPLETED/FAILED.
- * 네이버 검색 API는 동기 호출(단일 요청/응답)이라 별도 워커 큐 없이 이 함수 내부에서 즉시 처리.
+ * @description PENDING 생성 → RUNNING 전이 → 네이버 쇼핑 검색 API 호출 → 결과 저장 → COMPLETED/FAILED
+ * 네이버 검색 API는 동기 호출(단일 요청/응답)이라 별도 워커 큐 없이 이 함수 내부에서 즉시 처리
  * 실패해도 예외 재전파 없이 FAILED 상태로 반환 — 호출부(API 라우트)는 항상 SearchJob 레코드 수신
  */
 export const createAndRunSearchJob = async (input: CreateSearchJobInput, keywordId?: string) => {
