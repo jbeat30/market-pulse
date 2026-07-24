@@ -4,6 +4,7 @@ export { QuickSearchBar } from './QuickSearchBar';
 export { FilterPanel } from './FilterPanel';
 export { ExcelExportButton } from './ExcelExportButton';
 export { ProductDetailDrawer } from './ProductDetailDrawer';
+export { DataTable } from './DataTable';
 export { AdminSidebar } from './AdminSidebar';
 export { AdminHeader } from './AdminHeader';
 export { StatCardSkeleton, SearchJobCardSkeleton, TableRowSkeleton } from './DashboardSkeleton';
