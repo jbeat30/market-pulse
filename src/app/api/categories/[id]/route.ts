@@ -7,9 +7,9 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-/** PATCH /api/categories/:id — 카테고리 수정 */
+/** PATCH /api/categories/:id — 카테고리 수정(SUPER_ADMIN, ADMIN 전용) */
 export async function PATCH(request: Request, { params }: RouteParams) {
-  const { response } = await requireAuth();
+  const { response } = await requireAuth(['SUPER_ADMIN', 'ADMIN']);
   if (response) return response;
 
   const { id } = await params;
@@ -28,9 +28,9 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   }
 }
 
-/** DELETE /api/categories/:id — 카테고리 삭제(하위 잡 이력은 SetNull로 보존) */
+/** DELETE /api/categories/:id — 카테고리 삭제(SUPER_ADMIN, ADMIN 전용, 하위 잡 이력은 SetNull로 보존) */
 export async function DELETE(_request: Request, { params }: RouteParams) {
-  const { response } = await requireAuth();
+  const { response } = await requireAuth(['SUPER_ADMIN', 'ADMIN']);
   if (response) return response;
 
   const { id } = await params;
