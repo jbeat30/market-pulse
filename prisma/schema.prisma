@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  SUPER_ADMIN // 계정·역할 관리 포함 전권
+  ADMIN // 검색·조회·Export
+  VIEWER // 조회 전용
+}
+
+enum SearchJobStatus {
+  PENDING // 생성됨, 워커 대기
+  RUNNING // 네이버 검색 API 호출 진행 중
+  COMPLETED // 정상 완료
+  FAILED // 실패(에러)
+  CANCELLED // 사용자 취소(Abort)
+}
+
+/// 어드민 계정
+model User {
+  id           String    @id @default(cuid())
+  userId       String    @unique // 로그인 아이디(이메일 형식 아님)
+  passwordHash String // argon2 해시. 평문 저장 금지
+  name         String
+  role         UserRole  @default(VIEWER)
+  isActive     Boolean   @default(true) // 비활성 시 로그인 차단
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  searchJobs SearchJob[] // 이 유저가 생성한 검색 작업
+
+  @@index([userId])
+}
+
+/// 카테고리 — 검색 대상 비밀유지 핵심(값은 DB에만 존재). 네이버 자체 분류(category1~4)와는 무관한 관리자 정의 그룹
+model Category {
+  id        String   @id @default(cuid())
+  name      String // 관리자용 표시명(DB에만 존재)
+  naverCode String? // 네이버 카테고리 코드(선택)
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  keywords   KeywordHistory[]
+  searchJobs SearchJob[]
+
+  @@index([isActive])
+}
+
+/// 검색 키워드 이력 — 검색 대상 비밀유지 핵심(값은 DB에만 존재)
+model KeywordHistory {
+  id          String    @id @default(cuid())
+  keyword     String // 검색어. 소스 하드코딩 금지
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  searchCount Int       @default(0) // 사용 빈도
+  lastUsedAt  DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+
+  searchJobs SearchJob[]
+
+  @@index([categoryId])
+  @@index([keyword])
+}
+
+/// 검색 작업 — 네이버 쇼핑 검색 API 호출 단위. 상태 머신(PENDING→RUNNING→COMPLETED/FAILED/CANCELLED)
+model SearchJob {
+  id          String          @id @default(cuid())
+  status      SearchJobStatus @default(PENDING)
+  keyword     String // 스냅샷 — 실행 시점 값 보존(KeywordHistory 수정/삭제와 무관하게 잡 기록 무결성 유지)
+  categoryId  String?
+  category    Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  keywordId   String?
+  keywordRef  KeywordHistory? @relation(fields: [keywordId], references: [id], onDelete: SetNull)
+  createdById String?
+  createdBy   User?           @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  requestedCount Int     @default(20) // 요청한 수집 개수(5~40, zod로 범위 검증)
+  collectedCount Int     @default(0) // 실제 수집된 상품 수 — 요청보다 적을 수 있음(허용)
+  progress       Int     @default(0) // 0~100 진행률(collectedCount/requestedCount 기준)
+  errorMessage   String? // FAILED 시 개발자용 원인(사용자 UI 미노출)
+
+  startedAt  DateTime?
+  finishedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  products Product[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+/// 네이버 쇼핑 검색 API로 수집한 상품 정보
+model Product {
+  id               String    @id @default(cuid())
+  searchJobId      String
+  searchJob        SearchJob @relation(fields: [searchJobId], references: [id], onDelete: Cascade)
+  naverProductId   String? // 네이버 상품 식별자(productId)
+  title            String
+  price            Int? // 최저가(lprice). 값 없으면 null
+  highPrice        Int? // 최고가(hprice) — API가 빈 문자열을 주는 경우가 많아 nullable
+  mallName         String? // 판매처
+  productUrl       String // 원본 URL(link) — 실제 상품 페이지로 이동 가능
+  imageUrl         String?
+  brand            String?
+  maker            String?
+  naverProductType String? // API productType 원본값(1=가격비교 카탈로그, 2=일반상품 등 — 의미 비공식)
+  naverCategory1   String? // 네이버 자체 분류 — 우리 Category와 무관, 원문 보존용
+  naverCategory2   String?
+  naverCategory3   String?
+  naverCategory4   String?
+  rank             Int? // 검색 결과 내 순위
+  createdAt        DateTime  @default(now())
+
+  @@index([searchJobId])
+  @@index([naverProductId])
+}
