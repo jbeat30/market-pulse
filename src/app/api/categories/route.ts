@@ -20,9 +20,9 @@ export async function GET() {
   return NextResponse.json(mapped);
 }
 
-/** POST /api/categories — 카테고리 생성 */
+/** POST /api/categories — 카테고리 생성(SUPER_ADMIN, ADMIN 전용) */
 export async function POST(request: Request) {
-  const { response } = await requireAuth();
+  const { response } = await requireAuth(['SUPER_ADMIN', 'ADMIN']);
   if (response) return response;
 
   const body = await request.json();
